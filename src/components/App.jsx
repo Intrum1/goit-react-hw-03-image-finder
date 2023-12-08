@@ -22,7 +22,6 @@ export class App extends Component {
 
   componentDidUpdate(_, prevState) {
     if (prevState.query !== this.state.query) {
-      // Сбросить состояние перед загрузкой новых изображений
       this.setState({ images: [], page: 1, hasMoreImages: true }, () => {
         this.getImages();
       });
@@ -54,7 +53,7 @@ export class App extends Component {
   };
 
   handleLoadMore = () => {
-    // Вызываем getImages только если есть еще изображения
+    
     if (this.state.hasMoreImages) {
       this.getImages();
     }
