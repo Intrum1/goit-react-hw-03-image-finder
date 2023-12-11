@@ -7,7 +7,8 @@ const fetchImages = async ({ query, page, perPage = 12 }) => {
     const response = await axios.get(
       `${BASE_URL}?q=${query}&page=${page}&key=${API_KEY}&image_type=photo&orientation=horizontal&per_page=${perPage}`
     );
-    return response.data.hits;
+
+    return response.data;
   } catch (error) {
     throw error;
   }

@@ -4,9 +4,8 @@ import ImageGallery from './ImageGallery/ImageGallery';
 import Button from './Button/Button';
 import Loader from './Loader/Loader';
 import Modal from './Modal/Modal';
-import fetchImages from '../Services/Api'; 
+import fetchImages from '../Services/Api';
 import styles from './App.module.css';
-
 
 export class App extends Component {
   state = {
@@ -17,14 +16,15 @@ export class App extends Component {
     selectedImage: '',
     hasMoreImages: true,
     isLoading: false,
-    // inVisible: false,
+    totalImages: 0,
   };
 
   componentDidUpdate(_, prevState) {
-    if (prevState.query !== this.state.query) {
-      this.setState({ images: [], page: 1, hasMoreImages: true }, () => {
-        this.getImages();
-      });
+    if (
+      prevState.query !== this.state.query ||
+      prevState.page !== this.state.page
+    ) {
+      this.getImages();
     }
   }
 
@@ -33,13 +33,11 @@ export class App extends Component {
     try {
       this.setState({ isLoading: true });
 
-      const newImages = await fetchImages({ query, page });
+      const data = await fetchImages({ query, page });
 
-      this.setState((prevState) => ({
-        images: [...prevState.images, ...newImages],
-        page: prevState.page + 1,
-        hasMoreImages: newImages.length > 0,
-        // inVisible:{}
+      this.setState(prevState => ({
+        images: [...prevState.images, ...data.hits],
+        totalImages: data.totalHits,
       }));
     } catch (error) {
       console.error('Error fetching images:', error);
@@ -48,18 +46,23 @@ export class App extends Component {
     }
   };
 
-  handleSearchSubmit = (query) => {
-    this.setState({ query });
+  handleSearchSubmit = query => {
+    this.setState({
+      query,
+      images: [],
+      page: 1,
+      hasMoreImages: true,
+      totalImages: 0,
+    });
   };
 
   handleLoadMore = () => {
-    
-    if (this.state.hasMoreImages) {
-      this.getImages();
-    }
+    this.setState(prevState => ({
+      page: prevState.page + 1,
+    }));
   };
 
-  handleImageClick = (selectedImage) => {
+  handleImageClick = selectedImage => {
     this.setState({ showModal: true, selectedImage });
   };
 
@@ -68,15 +71,20 @@ export class App extends Component {
   };
 
   render() {
-    const { images, showModal, selectedImage, hasMoreImages, isLoading, } = this.state;
+    const { images, showModal, selectedImage, isLoading, totalImages } =
+      this.state;
 
     return (
       <div className={styles.App}>
         <SearchBar onSubmit={this.handleSearchSubmit} />
         <ImageGallery images={images} onImageClick={this.handleImageClick} />
         {isLoading && <Loader />}
-        <Button onClick={this.handleLoadMore} isVisible={hasMoreImages && images.length > 0} />
-        {showModal && <Modal image={selectedImage} onClose={this.handleCloseModal} />}
+        {images.length !== totalImages && !isLoading && (
+          <Button onClick={this.handleLoadMore} />
+        )}
+        {showModal && (
+          <Modal image={selectedImage} onClose={this.handleCloseModal} />
+        )}
       </div>
     );
   }
